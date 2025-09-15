@@ -1,0 +1,20 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/wallet_db?currentSchema=wallet_schema
+    username: wallet
+    password: wallet
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: wallet_schema
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    liquibase-schema: public
+    default-schema: wallet_schema

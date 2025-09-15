@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="0912205-002-create_account_table" author="usmanova">
+        <createTable tableName="account">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="owner_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="balance_minor" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <addUniqueConstraint
+                tableName="account"
+                columnNames="owner_id, currency"
+                constraintName="uk_account_owner_currency"/>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,44 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="0912205-003_journal_table" author="usmanova">
+        <createTable tableName="journal_entry">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="idempotency_key" type="VARCHAR(80)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="external_ref" type="VARCHAR(120)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <createTable tableName="journal_line">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="journal_entry_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_line_entry"
+                             referencedTableName="journal_entry" referencedColumnNames="id"/>
+            </column>
+            <column name="account_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_line_account"
+                             referencedTableName="account" referencedColumnNames="id"/>
+            </column>
+            <column name="amount_minor" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="side" type="VARCHAR(6)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="journal_line" indexName="idx_line_entry">
+            <column name="journal_entry_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
