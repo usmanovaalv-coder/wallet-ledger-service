@@ -3,9 +3,13 @@ package com.example.walletledgerservice.domain.model;
 import com.example.walletledgerservice.enums.Side;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 @Entity
+@Setter
+@Getter
 @Table(name = "journal_line")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class JournalLineEntity extends BaseEntity {
@@ -24,4 +28,7 @@ public class JournalLineEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 6)
     Side side;
+
+    @Column(nullable = false, length = 3)
+    String currency;
 }

@@ -8,15 +8,16 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.shaded.org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -25,6 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @Testcontainers
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class IntegrationTestBase {
 
@@ -63,26 +65,17 @@ public abstract class IntegrationTestBase {
         truncateSchema(jdbc, List.of("databasechangelog", "databasechangeloglock"));
     }
 
-    protected static void truncateSchema(JdbcTemplate jdbc,
-                                         @Nullable List<String> excludeTables) {
-        List<String> tables = jdbc.queryForList("""
-            SELECT tablename
-            FROM pg_tables
-            WHERE schemaname = ?
-              AND tablename NOT IN ('databasechangelog','databasechangeloglock')
-            """,
-                String.class, SCHEMA);
+    protected static void truncateSchema(JdbcTemplate jdbc, List<String> exclude) {
+        List<String> tables = jdbc.queryForList(
+                "SELECT tablename FROM pg_tables WHERE schemaname = ?",
+                String.class, SCHEMA
+        );
 
-        if (excludeTables != null && !excludeTables.isEmpty()) {
-            tables.removeAll(excludeTables);
-        }
+        if (exclude != null) tables.removeAll(exclude);
+        if (tables.isEmpty()) return;
 
-        if (!tables.isEmpty()) {
-            String joined = tables.stream()
-                    .map(t -> SCHEMA + "." + t)
-                    .collect(Collectors.joining(","));
-            jdbc.execute("TRUNCATE TABLE " + joined + " RESTART IDENTITY CASCADE");
-        }
+        String joined = tables.stream().map(t -> SCHEMA + "." + t).collect(Collectors.joining(","));
+        jdbc.execute("TRUNCATE TABLE " + joined + " RESTART IDENTITY CASCADE");
     }
 
     protected ResultActions postJson(String url, Object body) throws Exception {
@@ -92,6 +85,26 @@ public abstract class IntegrationTestBase {
                         .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body))
         );
+    }
+
+    ResultActions postJson(String url, Object body, Map<String, String> headers) throws Exception {
+        var request = post(url)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body));
+
+        if (headers != null) headers.forEach(request::header);
+        return mockMvc.perform(request);
+    }
+
+    ResultActions postJson(String url, Map<String, String> headers, Map<String, String> param) throws Exception {
+        var request = post(url)
+                .accept(MediaType.APPLICATION_JSON);
+
+        if (headers != null) headers.forEach(request::header);
+        if (param != null)  param.forEach(request::param);
+
+        return mockMvc.perform(request);
     }
 
     protected ResultActions getJson(String urlTemplate, Object... uriVars) throws Exception {

@@ -7,6 +7,11 @@
           http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
 
     <changeSet id="0912205-002-create_account_table" author="usmanova">
+        <preConditions>
+            <not>
+                <tableExists tableName="account"/>
+            </not>
+        </preConditions>
         <createTable tableName="account">
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true"/>
